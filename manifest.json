@@ -2,38 +2,30 @@
   "name": "SatsPOS - Lightning Payments",
   "short_name": "SatsPOS",
   "description": "Lightning POS with Bluetooth thermal printer support for accepting Bitcoin payments",
-  "start_url": "/satspos-web/",
-  "scope": "/satspos-web/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#667eea",
   "orientation": "portrait",
-  "categories": ["business", "finance", "productivity"],
-  "screenshots": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'%3E%3Crect width='540' height='720' fill='%23667eea'/%3E%3Ctext x='270' y='360' font-size='120' text-anchor='middle' fill='white'%3E⚡%3C/text%3E%3C/svg%3E",
-      "sizes": "540x720",
-      "type": "image/svg+xml",
-      "form_factor": "narrow"
-    }
-  ],
+  "id": "satspos-app",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23667eea'/%3E%3Ctext x='96' y='140' font-size='100' text-anchor='middle' fill='white'%3E⚡%3C/text%3E%3C/svg%3E",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23667eea'/%3E%3Ctext x='256' y='370' font-size='280' text-anchor='middle' fill='white'%3E⚡%3C/text%3E%3C/svg%3E",
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23667eea'/%3E%3Ctext x='96' y='140' font-size='100' text-anchor='middle' fill='white'%3E⚡%3C/text%3E%3C/svg%3E",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ]
