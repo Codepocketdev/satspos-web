@@ -326,6 +326,8 @@
         let currentInvoice = null;
         let currentTransaction = {};
         let deferredPrompt = null;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 3;
         
         // PWA Install prompt
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -358,8 +360,67 @@
             });
         }
         
-        // Save settings to localStorage
-        function saveSettings() {
+        // Save printer device ID for reconnection
+        function savePrinterConnection() {
+            if (printerDevice) {
+                localStorage.setItem('printerDeviceId', printerDevice.id);
+                localStorage.setItem('printerDeviceName', printerDevice.name);
+            }
+        }
+        
+        // Reconnect to saved printer
+        async function reconnectToPrinter() {
+            const savedDeviceId = localStorage.getItem('printerDeviceId');
+            if (!savedDeviceId || !printerDevice) return false;
+            
+            try {
+                if (!printerDevice.gatt.connected) {
+                    setStatus('🔄 Reconnecting to printer...', 'info');
+                    const server = await printerDevice.gatt.connect();
+                    
+                    // Re-find the write characteristic
+                    const services = await server.getPrimaryServices();
+                    for (const service of services) {
+                        const characteristics = await service.getCharacteristics();
+                        for (const char of characteristics) {
+                            if (char.properties.write || char.properties.writeWithoutResponse) {
+                                printerCharacteristic = char;
+                                setStatus('✅ Printer reconnected!', 'success');
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return true;
+            } catch (error) {
+                console.error('Reconnect failed:', error);
+                reconnectAttempts++;
+                if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                    setTimeout(reconnectToPrinter, 2000);
+                }
+                return false;
+            }
+        }
+        
+        // Handle when app comes back to foreground
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible' && printerDevice) {
+                reconnectAttempts = 0;
+                await reconnectToPrinter();
+            }
+        });
+        
+        // Handle Bluetooth disconnect events
+        function setupDisconnectHandler() {
+            if (printerDevice) {
+                printerDevice.addEventListener('gattserverdisconnected', async () => {
+                    console.log('Printer disconnected');
+                    setStatus('⚠️ Printer disconnected. Reconnecting...', 'warning');
+                    reconnectAttempts = 0;
+                    await reconnectToPrinter();
+                });
+            }
+        }
             localStorage.setItem('shopName', document.getElementById('shopName').value);
             localStorage.setItem('shopAddress', document.getElementById('shopAddress').value);
             localStorage.setItem('lightningAddress', document.getElementById('lightningAddress').value);
@@ -436,6 +497,9 @@
                 }
                 
                 await sendToPrinter(INIT + CENTER + BOLD_ON + 'Connected!' + BOLD_OFF + NEWLINE + NEWLINE + CUT);
+                
+                setupDisconnectHandler();
+                savePrinterConnection();
                 
                 setStatus('✅ Printer connected: ' + printerDevice.name, 'success');
                 document.getElementById('printerInfo').classList.remove('hidden');
