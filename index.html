@@ -378,7 +378,6 @@
                     setStatus('🔄 Reconnecting to printer...', 'info');
                     const server = await printerDevice.gatt.connect();
                     
-                    // Re-find the write characteristic
                     const services = await server.getPrimaryServices();
                     for (const service of services) {
                         const characteristics = await service.getCharacteristics();
@@ -421,9 +420,13 @@
                 });
             }
         }
+        
+        // Save settings to localStorage
+        function saveSettings() {
             localStorage.setItem('shopName', document.getElementById('shopName').value);
             localStorage.setItem('shopAddress', document.getElementById('shopAddress').value);
             localStorage.setItem('lightningAddress', document.getElementById('lightningAddress').value);
+            savePrinterConnection();
         }
         
         function loadSettings() {
@@ -547,7 +550,6 @@
                 return;
             }
             
-            // Save lightning address for future use
             localStorage.setItem('lightningAddress', lightningAddr);
             
             setStatus('🔍 Resolving lightning address...', 'info');
