@@ -234,6 +234,83 @@
             flex: 1;
             margin: 0;
         }
+        
+        .history-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .history-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .history-filters select {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .transaction-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .transaction-item-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .transaction-amount {
+            font-weight: bold;
+            color: #38ef7d;
+            font-size: 16px;
+        }
+        
+        .transaction-date {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .no-transactions {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
     </style>
 </head>
 <body>
@@ -274,24 +351,66 @@
         
         <!-- Transaction Section -->
         <div id="transactionSection" class="hidden">
-            <div class="form-group">
-                <label>Lightning Address</label>
-                <input type="text" id="lightningAddress" placeholder="user@walletofsatoshi.com" value="homelyviolin01@walletofsatoshi.com">
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="btn-secondary" style="flex: 1;" onclick="showNewSale()">
+                    💰 New Sale
+                </button>
+                <button class="btn-secondary" style="flex: 1;" onclick="showHistory()">
+                    📊 History
+                </button>
             </div>
             
-            <div class="form-group">
-                <label>Item Name</label>
-                <input type="text" id="itemName" placeholder="Coffee">
+            <div id="newSaleView">
+                <div class="form-group">
+                    <label>Lightning Address</label>
+                    <input type="text" id="lightningAddress" placeholder="user@walletofsatoshi.com" value="homelyviolin01@walletofsatoshi.com">
+                </div>
+                
+                <div class="form-group">
+                    <label>Item Name</label>
+                    <input type="text" id="itemName" placeholder="Coffee">
+                </div>
+                
+                <div class="form-group">
+                    <label>Amount (sats)</label>
+                    <input type="number" id="amount" placeholder="1000">
+                </div>
+                
+                <button class="btn-success" onclick="createInvoice()">
+                    Generate Invoice
+                </button>
             </div>
             
-            <div class="form-group">
-                <label>Amount (sats)</label>
-                <input type="number" id="amount" placeholder="1000">
+            <div id="historyView" class="hidden">
+                <div class="history-stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Today</div>
+                        <div class="stat-value" id="todayTotal">0 sats</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">This Week</div>
+                        <div class="stat-value" id="weekTotal">0 sats</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">This Month</div>
+                        <div class="stat-value" id="monthTotal">0 sats</div>
+                    </div>
+                </div>
+                
+                <div class="history-filters">
+                    <select id="periodFilter" onchange="filterHistory()">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="all">All Time</option>
+                    </select>
+                    <button class="btn-secondary" onclick="exportHistory()" style="padding: 10px 20px;">
+                        📥 Export CSV
+                    </button>
+                </div>
+                
+                <div id="transactionList"></div>
             </div>
-            
-            <button class="btn-success" onclick="createInvoice()">
-                Generate Invoice
-            </button>
         </div>
         
         <!-- Invoice Display -->
@@ -328,6 +447,137 @@
         let deferredPrompt = null;
         let reconnectAttempts = 0;
         const MAX_RECONNECT_ATTEMPTS = 3;
+        let transactionHistory = [];
+        
+        // Load transaction history
+        function loadTransactionHistory() {
+            const stored = localStorage.getItem('transactionHistory');
+            if (stored) {
+                transactionHistory = JSON.parse(stored);
+            }
+        }
+        
+        // Save transaction
+        function saveTransaction(transaction) {
+            transactionHistory.unshift(transaction);
+            localStorage.setItem('transactionHistory', JSON.stringify(transactionHistory));
+            updateHistoryStats();
+        }
+        
+        // Calculate totals
+        function calculateTotals() {
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+            const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            
+            let todayTotal = 0;
+            let weekTotal = 0;
+            let monthTotal = 0;
+            
+            transactionHistory.forEach(tx => {
+                const txDate = new Date(tx.timestamp);
+                const amount = tx.amount;
+                
+                if (txDate >= todayStart) todayTotal += amount;
+                if (txDate >= weekStart) weekTotal += amount;
+                if (txDate >= monthStart) monthTotal += amount;
+            });
+            
+            return { todayTotal, weekTotal, monthTotal };
+        }
+        
+        // Update stats display
+        function updateHistoryStats() {
+            const { todayTotal, weekTotal, monthTotal } = calculateTotals();
+            document.getElementById('todayTotal').textContent = todayTotal.toLocaleString() + ' sats';
+            document.getElementById('weekTotal').textContent = weekTotal.toLocaleString() + ' sats';
+            document.getElementById('monthTotal').textContent = monthTotal.toLocaleString() + ' sats';
+        }
+        
+        // Show/hide views
+        function showNewSale() {
+            document.getElementById('newSaleView').classList.remove('hidden');
+            document.getElementById('historyView').classList.add('hidden');
+        }
+        
+        function showHistory() {
+            document.getElementById('newSaleView').classList.add('hidden');
+            document.getElementById('historyView').classList.remove('hidden');
+            updateHistoryStats();
+            filterHistory();
+        }
+        
+        // Filter history
+        function filterHistory() {
+            const period = document.getElementById('periodFilter').value;
+            const now = new Date();
+            let startDate;
+            
+            if (period === 'today') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            } else if (period === 'week') {
+                startDate = new Date(now.setDate(now.getDate() - now.getDay()));
+            } else if (period === 'month') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else {
+                startDate = new Date(0);
+            }
+            
+            const filtered = transactionHistory.filter(tx => new Date(tx.timestamp) >= startDate);
+            displayTransactions(filtered);
+        }
+        
+        // Display transactions
+        function displayTransactions(transactions) {
+            const list = document.getElementById('transactionList');
+            
+            if (transactions.length === 0) {
+                list.innerHTML = '<div class="no-transactions">No transactions yet</div>';
+                return;
+            }
+            
+            list.innerHTML = transactions.map(tx => `
+                <div class="transaction-item">
+                    <div class="transaction-header">
+                        <span class="transaction-item-name">${tx.itemName}</span>
+                        <span class="transaction-amount">+${tx.amount.toLocaleString()} sats</span>
+                    </div>
+                    <div class="transaction-date">
+                        ${new Date(tx.timestamp).toLocaleString()}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Export to CSV
+        function exportHistory() {
+            if (transactionHistory.length === 0) {
+                alert('No transactions to export');
+                return;
+            }
+            
+            const csv = [
+                ['Date', 'Time', 'Item', 'Amount (sats)', 'Lightning Address'],
+                ...transactionHistory.map(tx => {
+                    const date = new Date(tx.timestamp);
+                    return [
+                        date.toLocaleDateString(),
+                        date.toLocaleTimeString(),
+                        tx.itemName,
+                        tx.amount,
+                        tx.lightningAddr
+                    ];
+                })
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `satspos_history_${Date.now()}.csv`;
+            a.click();
+        }
         
         // PWA Install prompt
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -439,7 +689,11 @@
             if (lightningAddress) document.getElementById('lightningAddress').value = lightningAddress;
         }
         
-        window.addEventListener('load', loadSettings);
+        window.addEventListener('load', () => {
+            loadSettings();
+            loadTransactionHistory();
+            updateHistoryStats();
+        });
         
         // ESC/POS commands
         const ESC = '\x1B';
@@ -616,6 +870,15 @@
                 }
                 
                 setStatus('✅ Transaction complete!', 'success');
+                
+                // Save to history
+                saveTransaction({
+                    itemName: currentTransaction.itemName,
+                    amount: currentTransaction.amount,
+                    lightningAddr: currentTransaction.lightningAddr,
+                    timestamp: currentTransaction.timestamp,
+                    invoice: currentTransaction.invoice
+                });
                 
                 setTimeout(() => {
                     document.getElementById('invoiceSection').classList.add('hidden');
