@@ -352,6 +352,201 @@
             text-align: center;
             margin-bottom: 15px;
         }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        #imagePreview {
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        #imagePreview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        #productGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+        
+        .product-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .product-card.selected {
+            border-color: #38ef7d;
+            border-width: 3px;
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            background: #f5f5f5;
+        }
+        
+        .product-info {
+            padding: 10px;
+        }
+        
+        .product-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .product-price {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        
+        .product-actions button {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+            margin: 0;
+        }
+        
+        .cart-container {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .cart-container h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .cart-item-info {
+            flex: 1;
+        }
+        
+        .cart-item-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .cart-item-price {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .qty-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .cart-qty {
+            min-width: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .cart-total {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .cart-total span {
+            color: #38ef7d;
+            font-weight: bold;
+        }
+        
+        .no-products {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
     </style>
 </head>
 <body>
@@ -393,11 +588,76 @@
         <!-- Transaction Section -->
         <div id="transactionSection" class="hidden">
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button class="btn-secondary" style="flex: 1;" onclick="showProducts()">
+                    🛍️ Products
+                </button>
                 <button class="btn-secondary" style="flex: 1;" onclick="showNewSale()">
-                    💰 New Sale
+                    💰 Quick Sale
                 </button>
                 <button class="btn-secondary" style="flex: 1;" onclick="showHistory()">
                     📊 History
+                </button>
+            </div>
+            
+            <!-- Products View -->
+            <div id="productsView" class="hidden">
+                <button class="btn-primary" onclick="showAddProduct()" style="margin-bottom: 20px;">
+                    + Add Product
+                </button>
+                
+                <div id="productGrid"></div>
+            </div>
+            
+            <!-- Add Product Modal -->
+            <div id="addProductModal" class="modal hidden">
+                <div class="modal-content">
+                    <h3>Add Product</h3>
+                    
+                    <div class="form-group">
+                        <label>Product Photo</label>
+                        <input type="file" id="productImage" accept="image/*" onchange="previewImage()">
+                        <div id="imagePreview"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" id="productName" placeholder="Coffee">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Price</label>
+                        <div style="display: flex; gap: 10px;">
+                            <select id="productCurrency" style="width: 100px;">
+                                <option value="sats">Sats</option>
+                                <option value="kes">KES 🇰🇪</option>
+                                <option value="usd">USD 🇺🇸</option>
+                                <option value="eur">EUR 🇪🇺</option>
+                                <option value="ngn">NGN 🇳🇬</option>
+                                <option value="zar">ZAR 🇿🇦</option>
+                            </select>
+                            <input type="number" id="productPrice" placeholder="1000" style="flex: 1;">
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-success" onclick="saveProduct()" style="flex: 1;">Save</button>
+                        <button class="btn-secondary" onclick="closeAddProduct()" style="flex: 1;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shopping Cart -->
+            <div id="cartView" class="cart-container hidden">
+                <h3>Shopping Cart</h3>
+                <div id="cartItems"></div>
+                <div class="cart-total">
+                    <strong>Total:</strong> <span id="cartTotal">0 sats</span>
+                </div>
+                <button class="btn-success" onclick="checkoutCart()">
+                    Generate Invoice
+                </button>
+                <button class="btn-secondary" onclick="clearCart()">
+                    Clear Cart
                 </button>
             </div>
             
@@ -519,7 +779,10 @@
         let transactionHistory = [];
         let exchangeRates = {};
         let lastRateUpdate = 0;
-        const RATE_UPDATE_INTERVAL = 60000; // Update every 60 seconds
+        const RATE_UPDATE_INTERVAL = 60000;
+        let products = [];
+        let cart = {};
+        let editingProductId = null; // Update every 60 seconds
         
         // Fetch exchange rates
         async function updateExchangeRates() {
@@ -612,6 +875,269 @@
             document.getElementById('satsInput').classList.remove('hidden');
             document.getElementById('fiatInput').classList.add('hidden');
         }
+        
+        // Product Management
+        function showAddProduct() {
+            editingProductId = null;
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productImage').value = '';
+            document.getElementById('imagePreview').innerHTML = '';
+            document.getElementById('addProductModal').classList.remove('hidden');
+        }
+        
+        function closeAddProduct() {
+            document.getElementById('addProductModal').classList.add('hidden');
+        }
+        
+        function previewImage() {
+            const file = document.getElementById('productImage').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('imagePreview').innerHTML = 
+                        `<img src="${e.target.result}" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        async function saveProduct() {
+            const name = document.getElementById('productName').value.trim();
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const currency = document.getElementById('productCurrency').value;
+            const imageFile = document.getElementById('productImage').files[0];
+            
+            if (!name || !price || price <= 0) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            let satsPrice = price;
+            if (currency !== 'sats') {
+                const rate = exchangeRates[currency];
+                if (!rate) {
+                    alert('Exchange rate unavailable');
+                    return;
+                }
+                const btcAmount = price / rate;
+                satsPrice = Math.round(btcAmount * 100000000);
+            }
+            
+            let imageData = null;
+            if (imageFile) {
+                imageData = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.readAsDataURL(imageFile);
+                });
+            }
+            
+            const product = {
+                id: editingProductId || Date.now(),
+                name,
+                price: satsPrice,
+                fiatPrice: currency !== 'sats' ? price : null,
+                currency: currency !== 'sats' ? currency : null,
+                image: imageData
+            };
+            
+            if (editingProductId) {
+                const index = products.findIndex(p => p.id === editingProductId);
+                products[index] = product;
+            } else {
+                products.push(product);
+            }
+            
+            saveProducts();
+            displayProducts();
+            closeAddProduct();
+        }
+        
+        function deleteProduct(id) {
+            if (confirm('Delete this product?')) {
+                products = products.filter(p => p.id !== id);
+                saveProducts();
+                displayProducts();
+            }
+        }
+        
+        function displayProducts() {
+            const grid = document.getElementById('productGrid');
+            
+            if (products.length === 0) {
+                grid.innerHTML = '<div class="no-products">No products yet. Add your first product!</div>';
+                return;
+            }
+            
+            grid.innerHTML = products.map(p => {
+                const imgSrc = p.image || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23e0e0e0"/><text x="50" y="55" font-size="40" text-anchor="middle" fill="%23999">?</text></svg>';
+                let priceDisplay = `${p.price.toLocaleString()} sats`;
+                if (p.fiatPrice && p.currency) {
+                    priceDisplay = `${p.fiatPrice} ${p.currency.toUpperCase()}`;
+                }
+                
+                return `
+                    <div class="product-card" onclick="addToCart(${p.id})">
+                        <img src="${imgSrc}" alt="${p.name}" class="product-image">
+                        <div class="product-info">
+                            <div class="product-name">${p.name}</div>
+                            <div class="product-price">${priceDisplay}</div>
+                        </div>
+                        <div class="product-actions">
+                            <button class="btn-secondary" onclick="event.stopPropagation(); deleteProduct(${p.id})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Cart Management
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            
+            if (cart[productId]) {
+                cart[productId].quantity++;
+            } else {
+                cart[productId] = {
+                    ...product,
+                    quantity: 1
+                };
+            }
+            
+            displayCart();
+        }
+        
+        function updateCartQuantity(productId, change) {
+            if (!cart[productId]) return;
+            
+            cart[productId].quantity += change;
+            
+            if (cart[productId].quantity <= 0) {
+                delete cart[productId];
+            }
+            
+            displayCart();
+        }
+        
+        function displayCart() {
+            const cartView = document.getElementById('cartView');
+            const cartItems = document.getElementById('cartItems');
+            const cartTotal = document.getElementById('cartTotal');
+            
+            const items = Object.values(cart);
+            
+            if (items.length === 0) {
+                cartView.classList.add('hidden');
+                return;
+            }
+            
+            cartView.classList.remove('hidden');
+            
+            let totalSats = 0;
+            cartItems.innerHTML = items.map(item => {
+                const itemTotal = item.price * item.quantity;
+                totalSats += itemTotal;
+                
+                return `
+                    <div class="cart-item">
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">${item.name}</div>
+                            <div class="cart-item-price">${item.price.toLocaleString()} sats each</div>
+                        </div>
+                        <div class="cart-item-controls">
+                            <button class="qty-btn" onclick="updateCartQuantity(${item.id}, -1)">−</button>
+                            <span class="cart-qty">${item.quantity}</span>
+                            <button class="qty-btn" onclick="updateCartQuantity(${item.id}, 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            cartTotal.textContent = `${totalSats.toLocaleString()} sats`;
+        }
+        
+        function clearCart() {
+            if (confirm('Clear cart?')) {
+                cart = {};
+                displayCart();
+            }
+        }
+        
+        async function checkoutCart() {
+            const items = Object.values(cart);
+            if (items.length === 0) return;
+            
+            const lightningAddr = document.getElementById('lightningAddress').value.trim();
+            if (!lightningAddr) {
+                alert('Please enter Lightning Address in Quick Sale tab');
+                return;
+            }
+            
+            const itemNames = items.map(i => `${i.name} x${i.quantity}`).join(', ');
+            const totalAmount = items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+            
+            // Create invoice for cart
+            try {
+                setStatus('🔍 Resolving lightning address...', 'info');
+                
+                const [user, domain] = lightningAddr.split('@');
+                const lnurlUrl = `https://${domain}/.well-known/lnurlp/${user}`;
+                
+                const lnurlResp = await fetch(lnurlUrl);
+                const lnurlData = await lnurlResp.json();
+                
+                setStatus('📄 Requesting invoice...', 'info');
+                
+                const callback = lnurlData.callback;
+                const msat = totalAmount * 1000;
+                const invoiceUrl = `${callback}?amount=${msat}&memo=${encodeURIComponent(itemNames)}`;
+                
+                const invoiceResp = await fetch(invoiceUrl);
+                const invoiceData = await invoiceResp.json();
+                
+                currentInvoice = invoiceData.pr || invoiceData.paymentRequest;
+                
+                if (!currentInvoice) {
+                    throw new Error('No invoice in response');
+                }
+                
+                currentTransaction = {
+                    shopName: document.getElementById('shopName').value,
+                    shopAddress: document.getElementById('shopAddress').value,
+                    lightningAddr,
+                    itemName: itemNames,
+                    amount: totalAmount,
+                    fiatAmount: null,
+                    currency: null,
+                    invoice: currentInvoice,
+                    timestamp: new Date().toISOString(),
+                    cartItems: items
+                };
+                
+                document.getElementById('qrcode').innerHTML = '';
+                new QRCode(document.getElementById('qrcode'), {
+                    text: currentInvoice,
+                    width: 256,
+                    height: 256
+                });
+                
+                document.getElementById('invoiceText').textContent = currentInvoice;
+                document.getElementById('transactionSection').classList.add('hidden');
+                document.getElementById('invoiceSection').classList.remove('hidden');
+                
+                setStatus('✅ Invoice generated! Waiting for payment...', 'success');
+                
+                // Clear cart after checkout
+                cart = {};
+                displayCart();
+                
+            } catch (error) {
+                console.error('Invoice error:', error);
+                setStatus('❌ Failed to create invoice: ' + error.message, 'error');
+            }
+        }
         function loadTransactionHistory() {
             const stored = localStorage.getItem('transactionHistory');
             if (stored) {
@@ -658,14 +1184,26 @@
         }
         
         // Show/hide views
+        function showProducts() {
+            document.getElementById('productsView').classList.remove('hidden');
+            document.getElementById('newSaleView').classList.add('hidden');
+            document.getElementById('historyView').classList.add('hidden');
+            document.getElementById('cartView').classList.add('hidden');
+            displayProducts();
+        }
+        
         function showNewSale() {
             document.getElementById('newSaleView').classList.remove('hidden');
             document.getElementById('historyView').classList.add('hidden');
+            document.getElementById('productsView').classList.add('hidden');
+            document.getElementById('cartView').classList.add('hidden');
         }
         
         function showHistory() {
             document.getElementById('newSaleView').classList.add('hidden');
             document.getElementById('historyView').classList.remove('hidden');
+            document.getElementById('productsView').classList.add('hidden');
+            document.getElementById('cartView').classList.add('hidden');
             updateHistoryStats();
             filterHistory();
         }
@@ -862,6 +1400,7 @@
         window.addEventListener('load', () => {
             loadSettings();
             loadTransactionHistory();
+            loadProducts();
             updateHistoryStats();
             updateExchangeRates();
             // Update rates every minute
@@ -1105,13 +1644,25 @@
             receipt += CENTER + t.shopAddress + NEWLINE;
             receipt += CENTER + new Date(t.timestamp).toLocaleString() + NEWLINE;
             receipt += LEFT + '--------------------------------' + NEWLINE;
-            receipt += LEFT + 'Item: ' + t.itemName + NEWLINE;
             
-            if (t.fiatAmount && t.currency) {
-                receipt += LEFT + 'Amount: ' + t.fiatAmount + ' ' + t.currency + NEWLINE;
-                receipt += LEFT + '        (' + t.amount + ' sats)' + NEWLINE;
+            // If cart items exist, print detailed receipt
+            if (t.cartItems && t.cartItems.length > 0) {
+                t.cartItems.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    receipt += LEFT + item.name + ' x' + item.quantity + NEWLINE;
+                    receipt += LEFT + '  ' + itemTotal.toLocaleString() + ' sats' + NEWLINE;
+                });
+                receipt += LEFT + '--------------------------------' + NEWLINE;
+                receipt += LEFT + BOLD_ON + 'Total: ' + t.amount + ' sats' + BOLD_OFF + NEWLINE;
             } else {
-                receipt += LEFT + 'Amount: ' + t.amount + ' sats' + NEWLINE;
+                receipt += LEFT + 'Item: ' + t.itemName + NEWLINE;
+                
+                if (t.fiatAmount && t.currency) {
+                    receipt += LEFT + 'Amount: ' + t.fiatAmount + ' ' + t.currency + NEWLINE;
+                    receipt += LEFT + '        (' + t.amount + ' sats)' + NEWLINE;
+                } else {
+                    receipt += LEFT + 'Amount: ' + t.amount + ' sats' + NEWLINE;
+                }
             }
             
             receipt += LEFT + 'To: ' + t.lightningAddr + NEWLINE;
