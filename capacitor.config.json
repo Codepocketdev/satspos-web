@@ -1,0 +1,9 @@
+{
+  "appId": "com.satspos.app",
+  "appName": "SatsPOS",
+  "webDir": ".",
+  "server": {
+    "url": "https://codepocketdev.github.io/satspos-web/",
+    "cleartext": true
+  }
+}
