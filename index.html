@@ -421,14 +421,16 @@
                     <label>Amount</label>
                     <div style="display: flex; gap: 10px;">
                         <select id="currency" onchange="convertAmount()" style="width: 100px;">
-                            <option value="kes">KES</option>
-                            <option value="usd">USD</option>
-                            <option value="eur">EUR</option>
-                            <option value="gbp">GBP</option>
-                            <option value="ngn">NGN</option>
-                            <option value="zar">ZAR</option>
-                            <option value="tzs">TZS</option>
-                            <option value="ugx">UGX</option>
+                            <option value="kes">KES 🇰🇪</option>
+                            <option value="usd">USD 🇺🇸</option>
+                            <option value="eur">EUR 🇪🇺</option>
+                            <option value="gbp">GBP 🇬🇧</option>
+                            <option value="ngn">NGN 🇳🇬</option>
+                            <option value="zar">ZAR 🇿🇦</option>
+                            <option value="ghs">GHS 🇬🇭</option>
+                            <option value="egp">EGP 🇪🇬</option>
+                            <option value="xof">XOF 🌍</option>
+                            <option value="mad">MAD 🇲🇦</option>
                         </select>
                         <input type="number" id="fiatAmount" placeholder="1000" oninput="convertAmount()" style="flex: 1;">
                     </div>
@@ -527,7 +529,7 @@
             }
             
             try {
-                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,eur,gbp,kes,ngn,zar,tzs,ugx');
+                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,eur,gbp,kes,ngn,zar,ghs,egp,xof,mad');
                 const data = await response.json();
                 
                 if (data.bitcoin) {
